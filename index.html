@@ -18,7 +18,7 @@
 <body>
   <main id="app">
     <h1>Form básico en Vue.js</h1>
-    <form id="ContactForm" class="ContactForm">
+    <form id="ContactForm" class="ContactForm" @submit.prevent="sendForm">
       <legend>¿Que deseas enviar?</legend>
       <div align="center">
         <input v-model="formType" :value="true" name="formType" type="radio" id="opinion">
@@ -31,23 +31,39 @@
       <transition name="fade">
         <span v-show="message.name" v-text="message.name" class="ContactForm-message u-error"></span>
       </transition>
-      <input type="email" name="email" title="Tu email" placeholder="Escribe tu email" pattern="^[a-z0-9]+(\.[_a-z0-9]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,15})$"
+      <input @keyup="validateData" type="email" name="email" title="Tu email" placeholder="Escribe tu email" pattern="^[a-z0-9]+(\.[_a-z0-9]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,15})$"
       required>
+      <transition name="fade">
+        <span v-show="message.email" v-text="message.email" class="ContactForm-message u-error"></span>
+      </transition>
       <template v-if='!formType'>
-        <input type="tel" name="phone" title="Tu teléfono" placeholder="Escribe tu teléfono" pattern="^[0-9]+$" required>
+        <input @keyup="validateData" type="tel" name="phone" title="Tu teléfono" placeholder="Escribe tu teléfono" pattern="^[0-9]+$" required>
+        <transition name="fade">
+          <span v-show="message.phone" v-text="message.phone" class="ContactForm-message u-error"></span>
+        </transition>
         <select name="services" required>
           <option v-for="service in services":value="service.id" v-text="service.name"></option>
         </select>
       </template>
       <template v-else>
-        <input type="text" name="subject" title="Asunto a tratar" placeholder="Asunto a tratar" required>
+        <input @keyup="validateData" type="text" name="subject" title="Asunto a tratar" placeholder="Asunto a tratar" required>
+        <transition name="fade">
+          <span v-show="message.subject" v-text="message.subject" class="ContactForm-message u-error"></span>
+        </transition>
       </template>
-      <textarea name="comments" title="Tus comentarios" placeholder="Escribe tus comentarios" cols="50" rows="5" required></textarea>
+      <textarea @keyup="validateData" name="comments" title="Tus comentarios" placeholder="Escribe tus comentarios" cols="50" rows="5" required></textarea>
+      <transition name="fade">
+        <span v-show="message.comments" v-text="message.comments" class="ContactForm-message u-error"></span>
+      </transition>
       <input type="submit" value="enviar">
+      <transition name="fade">
+        <span v-show="message.serverResponse" v-html="message.serverResponse" :class="responseClassCSS" :style="responseStyleCSS"></span>
+      </transition>
     </form>
     <pre>{{ $data }}</pre>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
   <script>
     const mv = new Vue({
       el:'#app',
@@ -78,6 +94,18 @@
       computed: {
         formTitle() {
           return(this.formType)?'opinión':'presupuesto'
+        },
+        responseClassCSS() {
+          return[
+            'ContactForm-message',
+            (this.serverResponse)?'u-success':'u-error'
+          ]
+        },
+        responseStyleCSS() {
+          return {
+            fontSize: '2rem',
+            color:'#FFF'
+          }
         }
       },
       methods: {
@@ -99,7 +127,20 @@
           }
         },
         sendForm(e) {
+          let form = document.getElementById('ContactForm'),
+          formData = new FormData(form)
 
+        axios.post('./server.php', formData)
+        .then(response => {
+          console.log(response)
+          this.message.serverResponse = response.data
+          this.serverResponse = true
+        })
+        .catch(error => {
+          console.log(error)
+          this.message.serverResponse = error
+          this.serverResponse = false
+        })
         }
       }
     })
