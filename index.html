@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form básico en Vue.js</title>
+  <link rel="icon" href="https://vuejs.org/images/logo.png">
+  <link rel="stylesheet" href="./style.css">
+  <style>
+    .fade-enter-active, .fade-leave-active {
+      transition: opacity .5s;
+    }
+    .fade-enter, .fade-leave-to {
+      opacity: 0;
+    }
+  </style>
+</head>
+<body>
+  <main id="app">
+    <h1>Form básico en Vue.js</h1>
+    <form id="ContactForm" class="ContactForm">
+      <legend>¿Que deseas enviar?</legend>
+      <div align="center">
+        <input v-model="formType" :value="true" name="formType" type="radio" id="opinion">
+        <label for="opinion">Opinión</label>
+        <input v-model="formType" :value="false" name="formType" type="radio" id="budget">
+        <label for="budget">Presupuesto</label>
+      </div>
+      <legend>Formulario de <span>{{ formTitle }}</span></legend>
+      <input @keyup="validateData" type="text" name="name" title="Tu nombre" placeholder="Escribe tu nombre" pattern="^[A-Za-zÑñÁáÉéÍíÓóÚúÜü\s]+$" required>
+      <transition name="fade">
+        <span v-show="message.name" v-text="message.name" class="ContactForm-message u-error"></span>
+      </transition>
+      <input type="email" name="email" title="Tu email" placeholder="Escribe tu email" pattern="^[a-z0-9]+(\.[_a-z0-9]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,15})$"
+      required>
+      <template v-if='!formType'>
+        <input type="tel" name="phone" title="Tu teléfono" placeholder="Escribe tu teléfono" pattern="^[0-9]+$" required>
+        <select name="services" required>
+          <option v-for="service in services":value="service.id" v-text="service.name"></option>
+        </select>
+      </template>
+      <template v-else>
+        <input type="text" name="subject" title="Asunto a tratar" placeholder="Asunto a tratar" required>
+      </template>
+      <textarea name="comments" title="Tus comentarios" placeholder="Escribe tus comentarios" cols="50" rows="5" required></textarea>
+      <input type="submit" value="enviar">
+    </form>
+    <pre>{{ $data }}</pre>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script>
+    const mv = new Vue({
+      el:'#app',
+      data: {
+        formType: true,
+        message: {
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          comments: '',
+          serverResponse: ''
+        },
+        services: [
+          {id: null, name: 'Selecciona un servicio'},
+          {id: 1, name: 'Diseño Gráfico'},
+          {id: 2, name: 'Diseño Web'},
+          {id: 3, name: 'Programación Web'},
+          {id: 4, name: 'Programación Móvil'},
+          {id: 5, name: 'Marketing Digital'}
+        ],
+        formats: {
+          name:'',
+          email:''
+        },
+        serverResponse: false
+      },
+      computed: {
+        formTitle() {
+          return(this.formType)?'opinión':'presupuesto'
+        }
+      },
+      methods: {
+        validateData(e) {
+          let input = e.target,
+          expression
+
+          if(input.pattern) {
+            let regex = new RegExp(input.pattern)
+            expression = !regex.exec(input.value)
+          } else {
+            expression = !input.value
+          }
+
+          if(expression) {
+            this.message[input.name] = `Dato incorrecto, ${input.title}`
+          } else {
+            this.message[input.name] = ''
+          }
+        },
+        sendForm(e) {
+
+        }
+      }
+    })
+  </script>
+</body>
+</html>
